@@ -44,6 +44,10 @@ export default defineConfig({
 				target: backendTarget,
 				changeOrigin: true
 			},
+			'/shraga': {
+				target: backendTarget,
+				changeOrigin: true
+			},
 			'/ws': {
 				target: backendTarget,
 				changeOrigin: true,
