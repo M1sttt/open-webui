@@ -243,6 +243,7 @@ from open_webui.utils.middleware import (
 )
 from open_webui.utils.misc import get_response_error_detail, merge_model_params
 from open_webui.utils.model_ids import strip_provider_model_prefix
+from open_webui.utils.shraga import shraga_config as _shraga_config
 from open_webui.utils.models import (
     check_model_access,
     get_all_base_models,
@@ -2293,6 +2294,8 @@ async def get_app_config(request: Request):
             ),
             'auto_redirect': config.get('oauth.auto_redirect'),
         },
+        # Native Shraga / ADFS SSO (port of the external owui-auth-proxy).
+        'shraga': _shraga_config(),
         'features': {
             # --- Public: required by login/signup page pre-auth ---
             'auth': WEBUI_AUTH,
@@ -2794,6 +2797,23 @@ async def oauth_client_callback(
 @app.get('/oauth/{provider}/login')
 async def oauth_login(provider: str, request: Request):
     return await oauth_manager.handle_login(request, provider)
+
+
+# --- Shraga / ADFS SSO (native port of owui-auth-proxy) ---
+
+
+@app.get('/shraga/login')
+async def shraga_login(request: Request):
+    from open_webui.utils.shraga import handle_shraga_login
+
+    return await handle_shraga_login(request)
+
+
+@app.api_route('/shraga/callback', methods=['GET', 'POST'])
+async def shraga_callback(request: Request, response: Response):
+    from open_webui.utils.shraga import handle_shraga_callback
+
+    return await handle_shraga_callback(request, response)
 
 
 @app.get('/oauth/{provider}/login/callback')

@@ -789,6 +789,51 @@ WEBUI_AUTH_TRUSTED_NAME_HEADER = os.getenv('WEBUI_AUTH_TRUSTED_NAME_HEADER', Non
 WEBUI_AUTH_TRUSTED_GROUPS_HEADER = os.getenv('WEBUI_AUTH_TRUSTED_GROUPS_HEADER', None)
 WEBUI_AUTH_TRUSTED_ROLE_HEADER = os.getenv('WEBUI_AUTH_TRUSTED_ROLE_HEADER', None)
 
+####################################
+# Shraga / ADFS SSO (native)
+####################################
+# Native port of the external owui-auth-proxy (@yesodot/passport-shraga). When
+# ENABLE_SHRAGA_AUTH is true a "Continue with Shraga" button is shown on the
+# login page; GET /shraga/login -> Shraga -> POST /shraga/callback issues the
+# normal Open WebUI session cookie. No reverse proxy / trusted-header mode needed.
+
+ENABLE_SHRAGA_AUTH = os.getenv('ENABLE_SHRAGA_AUTH', 'False').lower() == 'true'
+# Base URL of the Shraga IdP, e.g. https://shraga.example.internal
+SHRAGA_URL = os.getenv('SHRAGA_URL', '')
+# Absolute callback URL registered with Shraga. Must resolve to <origin>/shraga/callback.
+# If unset it is derived from the incoming request at runtime.
+SHRAGA_CALLBACK_URL = os.getenv('SHRAGA_CALLBACK_URL', '')
+# Text shown on the login button ("Continue with {label}").
+SHRAGA_BUTTON_LABEL = os.getenv('SHRAGA_BUTTON_LABEL', 'Shraga')
+
+# JWT verification. passport-shraga supports three modes; configure ONE:
+#  (a) pinned RSA/EC public key (PEM) - no network call, works from localhost.
+SHRAGA_PUBLIC_KEY = os.getenv('SHRAGA_PUBLIC_KEY', '')
+SHRAGA_PUBLIC_KEY_FILE = os.getenv('SHRAGA_PUBLIC_KEY_FILE', '')
+#  (b) fetch the key over TLS from Shraga at callback time.
+SHRAGA_PUBLIC_KEY_URL = os.getenv(
+    'SHRAGA_PUBLIC_KEY_URL',
+    (f'{SHRAGA_URL.rstrip("/")}/.well-known/publicKey.pem' if SHRAGA_URL else ''),
+)
+#  (c) per-login HS256 sign key: the app generates a secret, stashes it in the
+#      SignInSecret cookie and Shraga signs the callback JWT with it. Needs the
+#      app and Shraga to be same-site so the cookie survives the round-trip.
+SHRAGA_USE_SIGN_KEY = os.getenv('SHRAGA_USE_SIGN_KEY', 'False').lower() == 'true'
+
+# Comma-separated Shraga group names whose members get the Open WebUI 'admin' role.
+SHRAGA_ADMIN_GROUPS = [
+    g.strip() for g in os.getenv('SHRAGA_ADMIN_GROUPS', '').split(',') if g.strip()
+]
+# Sync Shraga groups onto the user (mirrors ENABLE_OAUTH_GROUP_MANAGEMENT).
+ENABLE_SHRAGA_GROUP_MANAGEMENT = os.getenv('ENABLE_SHRAGA_GROUP_MANAGEMENT', 'True').lower() == 'true'
+
+# DEV ONLY: skip Shraga entirely and sign in as this fixed identity. Never set in prod.
+SHRAGA_DEV_BYPASS_EMAIL = os.getenv('SHRAGA_DEV_BYPASS_EMAIL', '')
+SHRAGA_DEV_BYPASS_NAME = os.getenv('SHRAGA_DEV_BYPASS_NAME', 'Dev User')
+SHRAGA_DEV_BYPASS_GROUPS = [
+    g.strip() for g in os.getenv('SHRAGA_DEV_BYPASS_GROUPS', '').split(',') if g.strip()
+]
+
 # Custom header name for API key authentication.  Defaults to 'x-api-key'.
 # Useful when Open WebUI sits behind a reverse proxy / API gateway that
 # already uses the Authorization header for its own authentication — set

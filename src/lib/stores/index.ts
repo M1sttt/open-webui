@@ -365,6 +365,10 @@ type Config = {
 		};
 		auto_redirect?: boolean;
 	};
+	shraga?: {
+		enable: boolean;
+		label?: string;
+	};
 	ui?: {
 		default_interface_settings?: Record<string, unknown>;
 		pending_user_overlay_title?: string;
